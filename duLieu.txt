@@ -1,0 +1,14 @@
+Vai trò	Nhiệm vụ còn thiếu	Chi tiết cần bổ sung
+BE 1 (Core)	CRUD Club (Create, Update, Delete)	Trong club.controller.js chỉ có hàm đọc (getAllClubs, getClubDetail). Thiếu logic API cho việc Tạo, Sửa, Xóa CLB.
+BE 1 (Core)	API Phân quyền (Admin, Chủ nhiệm)	Còn thiếu: Logic kiểm tra quyền hạn (ví dụ: isAdminMiddleware, isManagerMiddleware). Hiện tại chỉ có authMiddleware chung.
+BE 2 (Events)	CRUD Event (Sửa, Xóa)	Trong event.controller.js chỉ có Tạo và Đọc danh sách. Thiếu logic API cho việc Sửa (updateEvent) và Xóa (deleteEvent) sự kiện.
+Project Lead	Luồng Phê duyệt (Approval Flow)	Đây là nghiệp vụ quan trọng nhất (Duyệt thành viên CLB, Duyệt Sự kiện). Hiện tại BE chưa có API để Chủ nhiệm/Admin thực hiện việc phê duyệt này.
+
+
+Vai trò	Nhiệm vụ còn thiếu	Ghi chú
+FE 2 (Admin)	Form Thêm/Sửa CLB và Sự kiện	Giao diện cho Form Tạo/Sửa CLB (ClubManagerPage.jsx) và Sự kiện (EventManagerPage.jsx) hiện tại chỉ là nút bấm, chưa có Modal hoặc Form logic để nhập liệu.
+FE 1 (UI)	Tích hợp API Cập nhật Hồ sơ	ProfilePage.jsx chỉ hiển thị, chưa có logic form và gọi userService.updateProfile để sửa thông tin.
+
+git remote add origin https://github.com/ThanTuan399/BE---FE-quan-ly-CLB-event.git
+git branch -M main
+git push -u origin main

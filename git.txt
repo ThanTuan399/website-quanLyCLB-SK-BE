@@ -1,0 +1,39 @@
+A. Di chuyển các file FE hiện tại vào thư mục FE_1
+Chúng ta dùng lệnh git mv để thông báo cho Git rằng "Tôi đang di chuyển các file này vào một folder mới, đừng xóa lịch sử của chúng".
+
+Lưu ý: Bạn cần phải tạo thư mục FE_1 và BE_1 ở máy tính trước nếu chưa có, và đảm bảo chúng trống rỗng hoặc đã chứa code.
+
+Thực hiện lần lượt các lệnh di chuyển: (Áp dụng cho các file/folder bạn thấy đang nằm rải rác ở root trên GitHub)
+
+Bash
+
+# Di chuyển thư mục src vào FE_1
+git mv src FE_1/
+
+# Di chuyển database vào FE_1
+git mv database FE_1/
+
+# Di chuyển index.js vào FE_1
+git mv index.js FE_1/
+
+# Di chuyển index.gitignore (hoặc .gitignore) vào FE_1
+git mv index.gitignore FE_1/
+(Cứ tiếp tục chạy lệnh git mv cho tất cả các file khác mà bạn muốn gom vào FE_1)
+
+B. Thêm thư mục Backend (BE_1)
+Thư mục BE_1 là dữ liệu mới (chưa có trên GitHub), chỉ cần thêm vào như bình thường.
+
+Bash
+
+git add BE_1
+C. Hoàn tất và Đẩy lên
+Sau khi di chuyển xong, bạn cam kết thay đổi và đẩy lên GitHub.
+
+Bash
+
+# Cam kết tất cả thay đổi (di chuyển + thêm BE_1)
+git commit -m "feat: Restructure project into Monorepo (FE_1 and BE_1 folders)"
+
+# Đẩy code lên GitHub
+git push origin master
+# (Hoặc git push origin main, tùy tên nhánh chính của bạn)
