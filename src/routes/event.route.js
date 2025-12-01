@@ -8,9 +8,18 @@ const authMiddleware = require('../middleware/auth.middleware'); // Import middl
 // Đường dẫn đầy đủ: GET http://localhost:3000/api/events
 router.get('/', eventController.getAllEvents);
 
-// 2. Tạo sự kiện mới (Private - Cần Token)
-// Đường dẫn đầy đủ: POST http://localhost:3000/api/events/clubs/:clubId
-// :clubId là tham số động, ví dụ: /api/events/clubs/1 (tạo cho CLB có ID là 1)
-router.post('/clubs/:clubId', authMiddleware, eventController.createEvent);
+// Lấy chi tiết 1 sự kiện (Nếu bạn có làm hàm getEventDetail)
+router.get('/:id', eventController.getEventDetail);
+
+// --- PROTECTED ROUTES (Cần đăng nhập & Quyền Manager/Admin) ---
+
+// 1. Tạo sự kiện
+router.post('/', verifyToken, isManager, eventController.createEvent);
+
+// 2. Cập nhật sự kiện (Mới)
+router.put('/:id', verifyToken, isManager, eventController.updateEvent);
+
+// 3. Xóa sự kiện (Mới)
+router.delete('/:id', verifyToken, isManager, eventController.deleteEvent);
 
 module.exports = router;

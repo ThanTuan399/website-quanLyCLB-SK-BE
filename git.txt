@@ -37,3 +37,11 @@ git commit -m "feat: Restructure project into Monorepo (FE_1 and BE_1 folders)"
 # Đẩy code lên GitHub
 git push origin master
 # (Hoặc git push origin main, tùy tên nhánh chính của bạn)
+
+echo "# website-quanLyCLB-SK-BE" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/ThanTuan399/website-quanLyCLB-SK-BE.git
+git push -u origin main

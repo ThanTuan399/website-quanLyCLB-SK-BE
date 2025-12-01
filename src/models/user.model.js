@@ -2,6 +2,7 @@
 
 const { sequelize } = require("../config/database"); // Import kết nối CSDL
 const { DataTypes } = require("sequelize"); // Import các kiểu dữ liệu
+const mongoose = require('mongoose');
 
 // Định nghĩa Model 'User'
 const User = sequelize.define('User', {
@@ -43,5 +44,17 @@ const User = sequelize.define('User', {
   timestamps: false // Không tự động thêm cột createdAt/updatedAt
 });
 
+const userSchema = new mongoose.Schema({
+    // ... các trường khác (fullName, email, password)
+    role: {
+        type: String,
+        enum: ['user', 'manager', 'admin'], // Chỉ chấp nhận 3 giá trị này
+        default: 'user' // Mặc định khi đăng ký là sinh viên thường
+    },
+    // ...
+}, { timestamps: true });
+
+module.exports = mongoose.model('User', userSchema);
+
 // Chia sẻ Model User đã định nghĩa
-module.exports = User;
+module.exports = mongoose.model('User', userSchema);

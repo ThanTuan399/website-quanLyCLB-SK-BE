@@ -1,5 +1,7 @@
 // src/controllers/event.controller.js
 const { Event, Club } = require('../models');
+const Event = require('../models/event.model');
+const EventRegistration = require('../models/eventRegistration.model'); // Import thêm cái này để xóa đăng ký kèm theo
 
 // 1. Tạo sự kiện mới (Chỉ dành cho BQL)
 exports.createEvent = async (req, res) => {
@@ -58,4 +60,59 @@ exports.getAllEvents = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Lỗi server", error: error.message });
   }
+};
+
+// 3. CẬP NHẬT SỰ KIỆN
+const updateEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body; // { title, date, location, description, ... }
+
+        // Tìm sự kiện và cập nhật
+        const updatedEvent = await Event.findByIdAndUpdate(id, updates, { new: true });
+
+        if (!updatedEvent) {
+            return res.status(404).json({ message: "Không tìm thấy sự kiện" });
+        }
+
+        res.status(200).json({
+            message: "Cập nhật sự kiện thành công",
+            event: updatedEvent
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi server", error: error.message });
+    }
+};
+
+// 4. XÓA SỰ KIỆN
+const deleteEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Tìm và xóa sự kiện
+        const deletedEvent = await Event.findByIdAndDelete(id);
+
+        if (!deletedEvent) {
+            return res.status(404).json({ message: "Không tìm thấy sự kiện để xóa" });
+        }
+
+        // --- QUAN TRỌNG: DỌN DẸP DỮ LIỆU ---
+        // Xóa tất cả các đơn đăng ký tham gia liên quan đến sự kiện này
+        await EventRegistration.deleteMany({ event: id });
+
+        res.status(200).json({ 
+            message: "Đã xóa sự kiện và toàn bộ danh sách đăng ký liên quan." 
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi server", error: error.message });
+    }
+};
+
+// CẬP NHẬT module.exports
+module.exports = {
+    createEvent,    // Hàm cũ
+    getEvents,      // Hàm cũ
+    getEventDetail, // (Nếu bạn đã có hàm xem chi tiết)
+    updateEvent,    // Mới
+    deleteEvent     // Mới
 };
