@@ -4,6 +4,7 @@
 const User = require('../models/user.model'); // Import Model User
 const bcrypt = require('bcryptjs'); // Import thư viện mã hóa mật khẩu
 const jwt = require('jsonwebtoken'); // Import thư viện tạo Token
+const { ClubMember } = require('../models'); // Import thêm ClubMember
 
 // 1. Logic cho chức năng Đăng ký (Register)
 exports.register = async (req, res) => {
@@ -44,37 +45,41 @@ exports.register = async (req, res) => {
 // 2. Logic cho chức năng Đăng nhập (Login)
 exports.login = async (req, res) => {
   try {
-    // Lấy thông tin từ body
     const { email, matKhau } = req.body;
 
-    // 1. Tìm người dùng trong CSDL bằng email
+    // 1. Tìm người dùng trước (ĐƯA LÊN ĐẦU)
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      // Nếu không tìm thấy, trả lỗi 404 (Not Found)
       return res.status(404).json({ message: "Sai email hoặc mật khẩu." });
     }
 
     // 2. So sánh mật khẩu
     const isMatch = await bcrypt.compare(matKhau, user.matKhau);
     if (!isMatch) {
-      // Nếu mật khẩu sai, trả lỗi 401 (Unauthorized)
       return res.status(401).json({ message: "Sai email hoặc mật khẩu." });
     }
 
-    // 3. Tạo JSON Web Token (JWT)
+    // --- 3. ĐOẠN CODE MỚI (Đặt ở đây mới đúng): Kiểm tra quyền Quản lý ---
+    // Lúc này 'user' đã có giá trị
+    const isClubManager = await ClubMember.findOne({
+      where: { 
+        userId: user.userId,
+        chucVu: 'quan_ly'
+      }
+    });
+
+    // 4. Tạo Token
     const payload = {
       userId: user.userId,
       email: user.email,
-      vaiTro: user.vaiTro
+      vaiTro: user.vaiTro, 
+      isManager: !!isClubManager // Chuyển object thành boolean (true/false)
     };
 
-    // Ký (sign) token với một "chìa khóa bí mật"
-    // LƯU Ý: 'YOUR_SECRET_KEY' phải được bảo mật, không bao giờ code cứng
-    const token = jwt.sign(payload, 'YOUR_SECRET_KEY', {
-      expiresIn: '2h' // Token hết hạn sau 2 giờ
+    const token = jwt.sign(payload, process.env.JWT_SECRET || 'YOUR_SECRET_KEY', {
+      expiresIn: '2h' 
     });
 
-    // 4. Trả về token cho người dùng
     res.status(200).json({
       message: "Đăng nhập thành công!",
       token: token,
@@ -84,7 +89,8 @@ exports.login = async (req, res) => {
         email: user.email,
         mssv: user.mssv,
         vaiTro: user.vaiTro,
-        avatarUrl: user.avatarUrl
+        avatarUrl: user.avatarUrl,
+        isManager: !!isClubManager // Trả về FE để hiển thị menu phù hợp
       }
     });
 

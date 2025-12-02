@@ -31,11 +31,11 @@ const isAdmin = (req, res, next) => {
 
 // 2. Kiểm tra Chủ nhiệm (Bao gồm cả Admin)
 const isManager = (req, res, next) => {
-    // Chúng ta giả định role Chủ nhiệm/BQL sẽ được định nghĩa là 'MANAGER' trong tương lai
-    // Hiện tại: chỉ cần là ADMIN là có quyền quản lý
-    const userRole = req.user.vaiTro;
+    // Lấy thông tin từ Token đã decode
+    const { vaiTro, isManager } = req.user;
 
-    if (userRole === 'ADMIN' || userRole === 'MANAGER') { // CHECK: vaiTro và MANAGER/ADMIN
+    // Cho phép nếu là ADMIN hệ thống HOẶC là Quản lý CLB
+    if (vaiTro === 'ADMIN' || isManager === true) {
         next();
     } else {
         res.status(403).json({ message: 'Yêu cầu quyền Chủ nhiệm/BQL' });
