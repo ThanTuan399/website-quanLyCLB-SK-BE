@@ -1,5 +1,5 @@
 const { Event, EventRegistration, User } = require('../models');
-const QRCode = require('qrcode');
+//const QRCode = require('qrcode');
 
 // 1. Đăng ký tham gia sự kiện
 exports.registerEvent = async (req, res) => {
@@ -30,61 +30,92 @@ exports.registerEvent = async (req, res) => {
   }
 };
 
-// 2. Lấy vé tham gia (QR Code)
-exports.getMyTicketQR = async (req, res) => {
-  try {
-    const { eventId } = req.params;
-    const userId = req.user.userId;
+// API: Duyệt đăng ký sự kiện
+exports.updateRegistrationStatus = async (req, res) => {
+    try {
+        const { eventId, userId } = req.params;
+        const { trangThai } = req.body; // 'da_duyet' hoặc 'tu_choi'
 
-    // Kiểm tra xem user có thực sự đăng ký chưa
-    const reg = await EventRegistration.findOne({ where: { userId, eventId } });
-    if (!reg) return res.status(404).json({ message: "Bạn chưa đăng ký sự kiện này!" });
+        if (!['da_duyet', 'tu_choi'].includes(trangThai)) {
+            return res.status(400).json({ message: "Trạng thái không hợp lệ" });
+        }
 
-    // Tạo nội dung mã QR (JSON string chứa ID để máy quét đọc)
-    const qrData = JSON.stringify({
-      u: userId,
-      e: eventId,
-      t: new Date().getTime() // Thêm timestamp để mỗi lần tạo hơi khác một chút (tùy chọn)
-    });
+        const [updatedRows] = await EventRegistration.update(
+            { trangThai: trangThai },
+            { 
+                where: { 
+                    eventId: eventId, 
+                    userId: userId 
+                } 
+            }
+        );
 
-    // Tạo ảnh QR dưới dạng Base64 (Data URL)
-    const qrCodeUrl = await QRCode.toDataURL(qrData);
+        if (updatedRows === 0) {
+            return res.status(404).json({ message: "Không tìm thấy đơn đăng ký này" });
+        }
 
-    // Trả về chuỗi ảnh để Frontend hiển thị thẻ <img src="...">
-    res.json({ qrCodeUrl });
+        res.status(200).json({ message: "Đã duyệt đơn đăng ký thành công" });
 
-  } catch (error) {
-    res.status(500).json({ message: "Lỗi tạo QR", error: error.message });
-  }
-};
-
-// 3. Điểm danh (Dành cho BQL quét mã)
-exports.checkInUser = async (req, res) => {
-  try {
-    // Dữ liệu nhận được từ việc quét QR
-    const { userId, eventId } = req.body; 
-
-    const reg = await EventRegistration.findOne({ where: { userId, eventId } });
-    if (!reg) return res.status(404).json({ message: "Không tìm thấy vé đăng ký!" });
-
-    if (reg.trangThaiCheckIn) {
-      return res.status(400).json({ message: "Sinh viên này đã check-in rồi!" });
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi server", error: error.message });
     }
-
-    // Cập nhật trạng thái
-    reg.trangThaiCheckIn = true;
-    reg.checkInTime = new Date();
-    await reg.save();
-
-    // Lấy thêm thông tin user để hiển thị tên người vừa check-in
-    const user = await User.findByPk(userId);
-
-    res.json({ 
-      message: "Điểm danh thành công!", 
-      student: user.hoTen 
-    });
-
-  } catch (error) {
-    res.status(500).json({ message: "Lỗi server", error: error.message });
-  }
 };
+
+// // 2. Lấy vé tham gia (QR Code)
+// exports.getMyTicketQR = async (req, res) => {
+//   try {
+//     const { eventId } = req.params;
+//     const userId = req.user.userId;
+
+//     // Kiểm tra xem user có thực sự đăng ký chưa
+//     const reg = await EventRegistration.findOne({ where: { userId, eventId } });
+//     if (!reg) return res.status(404).json({ message: "Bạn chưa đăng ký sự kiện này!" });
+
+//     // Tạo nội dung mã QR (JSON string chứa ID để máy quét đọc)
+//     const qrData = JSON.stringify({
+//       u: userId,
+//       e: eventId,
+//       t: new Date().getTime() // Thêm timestamp để mỗi lần tạo hơi khác một chút (tùy chọn)
+//     });
+
+//     // Tạo ảnh QR dưới dạng Base64 (Data URL)
+//     const qrCodeUrl = await QRCode.toDataURL(qrData);
+
+//     // Trả về chuỗi ảnh để Frontend hiển thị thẻ <img src="...">
+//     res.json({ qrCodeUrl });
+
+//   } catch (error) {
+//     res.status(500).json({ message: "Lỗi tạo QR", error: error.message });
+//   }
+// };
+
+// // 3. Điểm danh (Dành cho BQL quét mã)
+// exports.checkInUser = async (req, res) => {
+//   try {
+//     // Dữ liệu nhận được từ việc quét QR
+//     const { userId, eventId } = req.body; 
+
+//     const reg = await EventRegistration.findOne({ where: { userId, eventId } });
+//     if (!reg) return res.status(404).json({ message: "Không tìm thấy vé đăng ký!" });
+
+//     if (reg.trangThaiCheckIn) {
+//       return res.status(400).json({ message: "Sinh viên này đã check-in rồi!" });
+//     }
+
+//     // Cập nhật trạng thái
+//     reg.trangThaiCheckIn = true;
+//     reg.checkInTime = new Date();
+//     await reg.save();
+
+//     // Lấy thêm thông tin user để hiển thị tên người vừa check-in
+//     const user = await User.findByPk(userId);
+
+//     res.json({ 
+//       message: "Điểm danh thành công!", 
+//       student: user.hoTen 
+//     });
+
+//   } catch (error) {
+//     res.status(500).json({ message: "Lỗi server", error: error.message });
+//   }
+// };

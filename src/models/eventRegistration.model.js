@@ -10,22 +10,14 @@ const EventRegistration = sequelize.define('EventRegistration', {
     type: DataTypes.INTEGER,
     primaryKey: true
   },
-  registeredAt: {
+  trangThai: {
+    type: DataTypes.ENUM('cho_duyet', 'da_duyet', 'tu_choi'),
+    defaultValue: 'cho_duyet'
+  },
+  ngayDangKy: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
-  },
-  // Cột này quan trọng cho tính năng Điểm danh
-  trangThaiCheckIn: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false // Mặc định là chưa đến
-  },
-  checkInTime: {
-    type: DataTypes.DATE,
-    allowNull: true
   }
-}, {
-  tableName: 'EventRegistration',
-  timestamps: false
-});
+}, { tableName: 'EventRegistration', timestamps: false });
 
 module.exports = EventRegistration;
