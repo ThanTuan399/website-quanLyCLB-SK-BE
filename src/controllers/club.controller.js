@@ -1,3 +1,4 @@
+// src/controllers/club.controller.js
 const { Club, User, ClubMember } = require('../models');
 
 // 1. Lấy danh sách tất cả CLB
@@ -5,7 +6,6 @@ const getAllClubs = async (req, res) => {
   try {
     const clubs = await Club.findAll({
       include: [
-        // Chú ý: 'as' phải khớp với định nghĩa trong models/index.js
         { model: User, as: 'manager', attributes: ['hoTen', 'email'] } 
       ]
     });
@@ -60,11 +60,10 @@ const joinClub = async (req, res) => {
 const getMembers = async (req, res) => {
     try {
         const { clubId } = req.params;
-        // Đổi tên biến thành 'club' cho dễ hiểu, vì findByPk trả về 1 Club
         const club = await Club.findByPk(clubId, {
             include: [{
                 model: User,
-                as: 'members', // Alias này phải khớp trong models/index.js
+                as: 'members',
                 attributes: ['userId', 'hoTen', 'email', 'mssv'],
                 through: { attributes: ['trangThai', 'chucVu'] }
             }]
@@ -72,29 +71,31 @@ const getMembers = async (req, res) => {
         
         if (!club) return res.status(404).json({message: "CLB không tồn tại"});
 
-        // Trả về mảng members bên trong object club
         res.json(club.members);
     } catch (error) {
         res.status(500).json({ message: "Lỗi server", error: error.message });
     }
 }
 
-// 5. TẠO CLB
+// 5. TẠO CLB (Đã sửa tên biến khớp với Database)
 const createClub = async (req, res) => {
     try {
-        const { name, description, managerId, image } = req.body; 
+        // SỬA: Dùng tenCLB, chuNhiemId... thay vì name, managerId
+        const { tenCLB, moTa, chuNhiemId, anhBiaUrl, logoUrl, loaiHinh } = req.body; 
 
-        const existingClub = await Club.findOne({ where: { name: name } });
+        const existingClub = await Club.findOne({ where: { tenCLB } });
         if (existingClub) {
             return res.status(400).json({ message: "Tên CLB này đã tồn tại!" });
         }
 
         const newClub = await Club.create({
-            name,
-            description,
-            managerId,
-            image,
-            isActive: true
+            tenCLB,
+            moTa,
+            chuNhiemId,
+            anhBiaUrl,
+            logoUrl,
+            loaiHinh
+            // Bỏ isActive vì model không có
         });
 
         res.status(201).json({ message: "Tạo CLB thành công", data: newClub });
@@ -103,13 +104,14 @@ const createClub = async (req, res) => {
     }
 };
 
-// 6. CẬP NHẬT CLB
+// 6. CẬP NHẬT CLB (Đã sửa tên biến khớp với Database)
 const updateClub = async (req, res) => {
     try {
-        const { id } = req.params;
+        // SỬA: Dùng clubId thay vì id
+        const { clubId } = req.params;
         const updates = req.body;
 
-        const club = await Club.findByPk(id);
+        const club = await Club.findByPk(clubId);
         if (!club) {
             return res.status(404).json({ message: "Không tìm thấy CLB" });
         }
@@ -122,17 +124,18 @@ const updateClub = async (req, res) => {
     }
 };
 
-// 7. XÓA CLB
+// 7. XÓA CLB (Đã sửa tên biến khớp với Database)
 const deleteClub = async (req, res) => {
     try {
-        const { id } = req.params;
+        // SỬA: Dùng clubId thay vì id
+        const { clubId } = req.params;
         
-        const club = await Club.findByPk(id);
+        const club = await Club.findByPk(clubId);
         if (!club) {
             return res.status(404).json({ message: "Không tìm thấy CLB" });
         }
 
-        // Lưu ý: Nếu không cài đặt cascade ở Database, bạn nên xóa Members và Events của CLB trước
+        // Nếu database đã set ON DELETE CASCADE thì chỉ cần xóa CLB
         await club.destroy(); 
 
         res.status(200).json({ message: "Đã xóa CLB thành công" });
@@ -141,22 +144,19 @@ const deleteClub = async (req, res) => {
     }
 };
 
-// API: Duyệt hoặc Từ chối thành viên (Chuẩn Sequelize)
-exports.updateMemberStatus = async (req, res) => {
+// 8. DUYỆT THÀNH VIÊN (Đổi về const để export chung)
+const updateMemberStatus = async (req, res) => {
     try {
-        // Lấy 2 tham số ID từ URL
         const { clubId, userId } = req.params;
         const { trangThai } = req.body; // 'da_tham_gia' hoặc 'bi_tu_choi'
 
-        // 1. Validate trạng thái hợp lệ
         const validStatuses = ['da_tham_gia', 'bi_tu_choi'];
         if (!validStatuses.includes(trangThai)) {
             return res.status(400).json({ message: "Trạng thái không hợp lệ" });
         }
 
-        // 2. Thực hiện Update với điều kiện WHERE phức hợp
         const [updatedRows] = await ClubMember.update(
-            { trangThai: trangThai }, // Dữ liệu cần sửa
+            { trangThai: trangThai },
             { 
                 where: { 
                     clubId: clubId,
@@ -165,7 +165,6 @@ exports.updateMemberStatus = async (req, res) => {
             }
         );
 
-        // 3. Kiểm tra kết quả
         if (updatedRows === 0) {
             return res.status(404).json({ message: "Không tìm thấy yêu cầu tham gia này" });
         }
@@ -187,5 +186,6 @@ module.exports = {
     getMembers,
     createClub,
     updateClub,
-    deleteClub
+    deleteClub,
+    updateMemberStatus
 };

@@ -55,20 +55,19 @@ exports.getAllEvents = async (req, res) => {
     }
 };
 
-// 4. CẬP NHẬT SỰ KIỆN (Update - Sequelize Syntax)
+// 4. CẬP NHẬT SỰ KIỆN (Update)
 exports.updateEvent = async (req, res) => {
     try {
-        const { id } = req.params;
+        // SỬA LỖI: Dùng eventId thay vì id
+        const { eventId } = req.params; 
         const updates = req.body;
 
-        // Bước 1: Tìm sự kiện
-        const event = await Event.findByPk(id); // Dùng findByPk thay vì findById
+        const event = await Event.findByPk(eventId); 
 
         if (!event) {
             return res.status(404).json({ message: "Không tìm thấy sự kiện" });
         }
 
-        // Bước 2: Cập nhật
         await event.update(updates);
 
         res.status(200).json({
@@ -80,26 +79,23 @@ exports.updateEvent = async (req, res) => {
     }
 };
 
-// 5. XÓA SỰ KIỆN (Delete - Sequelize Syntax)
+// 5. XÓA SỰ KIỆN (Delete)
 exports.deleteEvent = async (req, res) => {
     try {
-        const { id } = req.params;
+        // SỬA LỖI: Dùng eventId thay vì id
+        const { eventId } = req.params; 
 
-        // Bước 1: Tìm sự kiện
-        const event = await Event.findByPk(id);
+        const event = await Event.findByPk(eventId);
 
         if (!event) {
             return res.status(404).json({ message: "Không tìm thấy sự kiện để xóa" });
         }
 
-        // Bước 2: Dọn dẹp dữ liệu rác (Cascade Delete thủ công)
-        // Xóa các đơn đăng ký có eventId tương ứng
-        // Lưu ý: Kiểm tra lại tên cột trong DB là 'eventId' hay 'EventId'
+        // Xóa các đơn đăng ký liên quan
         await EventRegistration.destroy({
-            where: { eventId: id } 
+            where: { eventId: eventId } 
         });
 
-        // Bước 3: Xóa sự kiện chính
         await event.destroy();
 
         res.status(200).json({

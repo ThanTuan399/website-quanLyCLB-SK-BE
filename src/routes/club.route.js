@@ -1,32 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const clubController = require('../controllers/club.controller');
-const authMiddleware = require('../middleware/auth.middleware'); // Để bảo vệ route
-const { verifyToken, isAdmin, isManager } = require('../middleware/auth.middleware');
-const registrationController = require('../controllers/registration.controller');
 
-// Public Routes (Ai cũng xem được)
+// SỬA: Import đúng cú pháp Destructuring (Vì file middleware export object)
+const { verifyToken, isAdmin, isManager } = require('../middleware/auth.middleware');
+
+// --- PUBLIC ROUTES (Ai cũng xem được) ---
 router.get('/', clubController.getAllClubs);
 router.get('/:clubId', clubController.getClubDetail);
 
-// Protected Routes (Phải đăng nhập mới dùng được)
-router.post('/:clubId/join', authMiddleware, clubController.joinClub);
-router.get('/:clubId/members', authMiddleware, clubController.getMembers);
+// --- MEMBER ROUTES (Phải đăng nhập) ---
+router.post('/:clubId/join', verifyToken, clubController.joinClub);
+router.get('/:clubId/members', verifyToken, isManager, clubController.getMembers);
 
-// Protected Routes (Chỉ Admin mới được làm)
-// POST: Tạo mới
+// --- ADMIN ROUTES (CRUD CLB - Chỉ Admin) ---
+// Tạo mới
 router.post('/', verifyToken, isAdmin, clubController.createClub);
 
-// PUT: Cập nhật (theo ID)
-router.put('/:id', verifyToken, isAdmin, clubController.updateClub);
+// Cập nhật (SỬA: Dùng :clubId thay vì :id để khớp với Controller)
+router.put('/:clubId', verifyToken, isAdmin, clubController.updateClub);
 
-// DELETE: Xóa (theo ID)
-router.delete('/:id', verifyToken, isAdmin, clubController.deleteClub);
+// Xóa (SỬA: Dùng :clubId thay vì :id)
+router.delete('/:clubId', verifyToken, isAdmin, clubController.deleteClub);
 
-// Endpoint: PUT /api/clubs/:clubId/members/:userId/status
+// --- MANAGER ROUTES (Quản lý thành viên) ---
+// Duyệt thành viên: PUT /api/clubs/:clubId/members/:userId/status
 router.put('/:clubId/members/:userId/status', verifyToken, isManager, clubController.updateMemberStatus);
 
-// Endpoint: PUT /api/registrations/events/:eventId/users/:userId/status
-router.put('/events/:eventId/users/:userId/status', verifyToken, isManager, registrationController.updateRegistrationStatus);
+// LƯU Ý: Đã xóa route 'updateRegistrationStatus' vì nó thuộc về registration.route.js
 
 module.exports = router;

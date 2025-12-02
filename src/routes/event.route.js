@@ -1,25 +1,30 @@
-// src/routes/event.route.js
 const express = require('express');
 const router = express.Router();
 const eventController = require('../controllers/event.controller');
-const authMiddleware = require('../middleware/auth.middleware'); // Import middleware xác thực
 
-// 1. Lấy danh sách tất cả sự kiện (Public - Không cần đăng nhập)
-// Đường dẫn đầy đủ: GET http://localhost:3000/api/events
+// SỬA: Import đúng middleware
+const { verifyToken, isManager } = require('../middleware/auth.middleware');
+
+// --- PUBLIC ROUTES ---
+// 1. Lấy danh sách tất cả sự kiện
+// URL: GET http://localhost:3000/api/events
 router.get('/', eventController.getAllEvents);
 
-// Lấy chi tiết 1 sự kiện (Nếu bạn có làm hàm getEventDetail)
-router.get('/:id', eventController.getEventDetail);
+// 2. Lấy chi tiết (Nếu Controller chưa có hàm này thì API sẽ lỗi 500, bạn cần bổ sung sau)
+// router.get('/:eventId', eventController.getEventById); 
 
 // --- PROTECTED ROUTES (Cần đăng nhập & Quyền Manager/Admin) ---
 
-// 1. Tạo sự kiện
-router.post('/', verifyToken, isManager, eventController.createEvent);
+// 3. Tạo sự kiện (SỬA: Cần clubId trên URL để biết tạo cho CLB nào)
+// URL: POST http://localhost:3000/api/events/clubs/:clubId
+router.post('/clubs/:clubId', verifyToken, isManager, eventController.createEvent);
 
-// 2. Cập nhật sự kiện (Mới)
-router.put('/:id', verifyToken, isManager, eventController.updateEvent);
+// 4. Cập nhật sự kiện (SỬA: Dùng :eventId thay vì :id)
+// URL: PUT http://localhost:3000/api/events/:eventId
+router.put('/:eventId', verifyToken, isManager, eventController.updateEvent);
 
-// 3. Xóa sự kiện (Mới)
-router.delete('/:id', verifyToken, isManager, eventController.deleteEvent);
+// 5. Xóa sự kiện (SỬA: Dùng :eventId thay vì :id)
+// URL: DELETE http://localhost:3000/api/events/:eventId
+router.delete('/:eventId', verifyToken, isManager, eventController.deleteEvent);
 
 module.exports = router;
